@@ -1,0 +1,181 @@
+{
+  "timestamp": "2025-01-13T18:37:01.584529",
+  "products": [
+    {
+      "name": "PLUS Rond fijn volkoren heel",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/186912_M/154dfc2a8e9e0c8b13763c3b3dc93a06/186912.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Rond fijn volkoren heel",
+      "price": 1.69,
+      "link": "https://www.plus.nl/product/plus-rond-fijn-volkoren-heel-186912",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Rond fijn volkoren Half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/186918_M/0fca06ab9d04d84803a36992546938a2/186918.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Rond fijn volkoren Half",
+      "price": 0.95,
+      "link": "https://www.plus.nl/product/plus-rond-fijn-volkoren-half-186918",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Groentespread mais curry",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/706636_M/c21ef55b6ef9eeac348f3b2cf823d38f/706636.png?w=96&h=96&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 150 g",
+      "unit_size": "Per 150 g",
+      "brand": "PLUS Groentespread mais curry",
+      "price": 1.99,
+      "link": "https://www.plus.nl/product/plus-groentespread-mais-curry-706636",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Groentespread Pompoen tandoori",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/706638_M/580b30148702ba811ae55d10bc72dd60/706638.png?w=96&h=96&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 150 g",
+      "unit_size": "Per 150 g",
+      "brand": "PLUS Groentespread Pompoen tandoori",
+      "price": 1.99,
+      "link": "https://www.plus.nl/product/plus-groentespread-pompoen-tandoori-706638",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Hummus op brood gekarameliseerde Ui",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/706642_M/86b822d89a04a8d93bb4250dbfa682c7/706642.png?w=96&h=96&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 175 g",
+      "unit_size": "Per 175 g",
+      "brand": "PLUS Hummus op brood gekarameliseerde Ui",
+      "price": 2.59,
+      "link": "https://www.plus.nl/product/plus-hummus-op-brood-gekarameliseerde-ui-706642",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Hummus op brood pittige paprika",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/706640_M/96494ebc3575a65a862f96de184ef43a/706640.png?w=96&h=96&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 175 g",
+      "unit_size": "Per 175 g",
+      "brand": "PLUS Hummus op brood pittige paprika",
+      "price": 1.99,
+      "link": "https://www.plus.nl/product/plus-hummus-op-brood-pittige-paprika-706640",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Rond bruin",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/186910_M/747e7ad8901cf8f780947e8cc241daf1/186910.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Rond bruin",
+      "price": 1.69,
+      "link": "https://www.plus.nl/product/plus-rond-bruin-186910",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Casino wit heel",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/680016_M/f87d71978bc51055ba2462569a4deda8/680016.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Casino wit heel",
+      "price": 1.49,
+      "link": "https://www.plus.nl/product/plus-casino-wit-heel-680016",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Korenlanders Vloerbrood extra donker half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/940608_M/537af1039b24c8c360226594d8c33cbb/940608.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 400 g",
+      "unit_size": "Per 400 g",
+      "brand": "PLUS Korenlanders Vloerbrood extra donker half",
+      "price": 1.55,
+      "link": "https://www.plus.nl/product/plus-korenlanders-vloerbrood-extra-donker-half-940608",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Rond wit",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/186908_M/3123827f1f5b2d2f1720eedd38ec15a6/186908.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Rond wit",
+      "price": 1.69,
+      "link": "https://www.plus.nl/product/plus-rond-wit-186908",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Korenlanders Vloerbrood donker half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/940604_M/fecf4013e46837537a7c5ee60625bca0/940604.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 400 g",
+      "unit_size": "Per 400 g",
+      "brand": "PLUS Korenlanders Vloerbrood donker half",
+      "price": 1.55,
+      "link": "https://www.plus.nl/product/plus-korenlanders-vloerbrood-donker-half-940604",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Rond bruin Half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/186916_M/77a2f2fa7b938fcee18de48b3b56117f/186916.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Rond bruin Half",
+      "price": 0.95,
+      "link": "https://www.plus.nl/product/plus-rond-bruin-half-186916",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Korenlanders Rond wit half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/885743_M/3a004a48f2c1cc98c34681d3e077a547/885743.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 400 g",
+      "unit_size": "Per 400 g",
+      "brand": "PLUS Korenlanders Rond wit half",
+      "price": 1.49,
+      "link": "https://www.plus.nl/product/plus-korenlanders-rond-wit-half-885743",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Casino wit half",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/680019_M/35f959d4ff9e35aaf7656eb23b76bf4e/680019.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Casino wit half",
+      "price": 0.85,
+      "link": "https://www.plus.nl/product/plus-casino-wit-half-680019",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Korenlanders Boeren tijger wit heel",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/296831_M/189e90ebbef015a4edeae560360a0754/296831.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Korenlanders Boeren tijger wit heel",
+      "price": 2.49,
+      "link": "https://www.plus.nl/product/plus-korenlanders-boeren-tijger-wit-heel-296831",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    },
+    {
+      "name": "PLUS Korenlanders Rond Wit heel",
+      "image": "https://images.ctfassets.net/s0lodsnpsezb/885727_M/27808e835a46281a26bc64151277a954/885727.png?w=120&h=120&fit=pad&fm=webp&q=85",
+      "unit_info": "Per 1 st",
+      "unit_size": "Per 1 st",
+      "brand": "PLUS Korenlanders Rond Wit heel",
+      "price": 2.79,
+      "link": "https://www.plus.nl/product/plus-korenlanders-rond-wit-heel-885727",
+      "store": "plus",
+      "scraped_at": "2025-01-13T18:37:01.584529"
+    }
+  ]
+}

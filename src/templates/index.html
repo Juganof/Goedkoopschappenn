@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grocery Price Comparison</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        .product-card {
+            transition: transform 0.2s;
+            cursor: pointer;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .product-card.selected {
+            border: 2px solid #198754;
+        }
+        .product-image {
+            height: 200px;
+            object-fit: contain;
+        }
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .store-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .store-ah {
+            background-color: #00a0df;
+            color: white;
+        }
+        .store-jumbo {
+            background-color: #ffcb05;
+            color: black;
+        }
+        .store-plus {
+            background-color: #198754;
+            color: white;
+        }
+        .store-logo {
+            width: 20px;
+            height: 20px;
+            object-fit: contain;
+        }
+        .store-logo-lg {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            margin-right: 10px;
+        }
+        /* Add new filter styles */
+        .filter-section {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 12px 15px;
+            margin-bottom: 12px;
+        }
+        .filter-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .filter-title {
+            font-size: 0.85rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 0;
+        }
+        .filter-subtitle {
+            font-size: 0.75rem;
+            color: #adb5bd;
+            margin-left: 8px;
+        }
+        .filter-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .filter-chip {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 16px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #495057;
+            font-weight: 500;
+        }
+        .filter-chip:hover {
+            border-color: #0d6efd;
+            background: #f8f9fa;
+        }
+        .filter-chip.active {
+            background: #0d6efd;
+            color: white;
+            border-color: #0d6efd;
+            box-shadow: 0 2px 4px rgba(13, 110, 253, 0.2);
+        }
+        .filter-chip .count {
+            background: rgba(0,0,0,0.08);
+            padding: 1px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            margin-left: 6px;
+            font-weight: normal;
+        }
+        .filter-chip.active .count {
+            background: rgba(255,255,255,0.2);
+        }
+        .filters-container {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            align-items: start;
+        }
+        .sort-section {
+            min-width: 200px;
+        }
+        .main-filters {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .modal-header {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .modal-title-section {
+            margin-bottom: 15px;
+        }
+        .modal-body {
+            padding-top: 0;
+        }
+        .filter-category {
+            font-size: 0.8rem;
+            color: #6c757d;
+            font-weight: 600;
+            text-transform: uppercase;
+            margin: 8px 0 4px;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Store logos (hidden, used as templates) -->
+    <div style="display: none;">
+        <img id="ah-logo" src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg" alt="AH Logo">
+        <img id="jumbo-logo" src="/static/Jumbo_Logo.svg" alt="Jumbo Logo">
+        <img id="plus-logo" src="/static/Plus_Logo.svg" alt="Plus Logo">
+    </div>
+
+    <!-- Loading overlay -->
+    <div id="loading">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+
+    <div class="container py-4">
+        <h1 class="mb-4">
+            <span>Grocery Price Comparison</span>
+            <div class="float-end">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg" alt="AH" class="store-logo-lg">
+                <img src="/static/Jumbo_Logo.svg" alt="Jumbo" class="store-logo-lg">
+                <img src="/static/Plus_Logo.svg" alt="Plus" class="store-logo-lg">
+            </div>
+        </h1>
+        
+        <!-- Store selection -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">Select Supermarkets</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="ah-checkbox" value="ah" checked>
+                    <label class="form-check-label" for="ah-checkbox">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg" alt="AH" style="height: 20px; margin-right: 5px;">
+                        Albert Heijn
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="jumbo-checkbox" value="jumbo" checked>
+                    <label class="form-check-label" for="jumbo-checkbox">
+                        <img src="/static/Jumbo_Logo.svg" alt="Jumbo" style="height: 20px; margin-right: 5px;">
+                        Jumbo
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input class="form-check-input" type="checkbox" id="plus-checkbox" value="plus" checked>
+                    <label class="form-check-label" for="plus-checkbox">
+                        <img src="/static/Plus_Logo.svg" alt="Plus" style="height: 20px; margin-right: 5px;">
+                        Plus
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add item form -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="input-group">
+                    <input type="text" id="itemInput" class="form-control" placeholder="Enter item (e.g., cheese, bread)">
+                    <button class="btn btn-primary" onclick="addItem()">Add Item</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grocery list and selected products -->
+        <div class="row">
+            <!-- Grocery list -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Grocery List</h5>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearList()">Clear List</button>
+                    </div>
+                    <div class="card-body">
+                        <ul id="groceryList" class="list-group">
+                            {% for item in grocery_list %}
+                            <li class="list-group-item">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                {{ item }}
+                                <div>
+                                        <button class="btn btn-sm btn-success me-2" onclick="searchProducts('{{ item }}', 'all')">Search</button>
+                                    <button class="btn btn-sm btn-danger" onclick="removeItem('{{ item }}')">Remove</button>
+                                    </div>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected products -->
+            <div class="col-md-8">
+                <!-- Summary Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Shopping Summary</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-4">
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-light">
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted mb-2">Total Items</h6>
+                                                    <h3 id="totalItems" class="mb-0">0</h3>
+                                                </div>
+                                            </div>
+                                            <div class="col-6">
+                                                <div class="text-center">
+                                                    <h6 class="text-muted mb-2">Total Cost</h6>
+                                                    <h3 id="totalCost" class="mb-0 text-primary">€0.00</h3>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-0 bg-success text-white">
+                                    <div class="card-body">
+                                        <div class="text-center">
+                                            <h6 class="mb-2">Total Savings</h6>
+                                            <h3 id="totalSavings" class="mb-0">€0,00</h3>
+                                            <small id="totalSavingsPerKg" class="text-white-50" style="display: none;">Compared to highest prices</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="card border-0 bg-light">
+                                    <div class="card-body">
+                                        <div class="row align-items-center">
+                                            <div class="col-md-6 border-end">
+                                                <div class="text-center">
+                                                    <div class="d-flex align-items-center justify-content-center mb-2">
+                                                        <img src="https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg" 
+                                                             alt="AH" 
+                                                             class="store-logo-lg me-2">
+                                                        <h6 class="text-muted mb-0">Items from AH</h6>
+                                                    </div>
+                                                    <h4 id="ahItems" class="mb-0">0 (€0.00)</h4>
+                                                    <small id="ahSavings" class="text-success">Saved: €0.00</small>
+                                                    <small id="ahSavingsPerKg" class="text-success d-block">€0.00 per kg cheaper</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <div class="text-center">
+                                                    <div class="d-flex align-items-center justify-content-center mb-2">
+                                                        <img src="/static/Jumbo_Logo.svg" 
+                                                             alt="Jumbo" 
+                                                             class="store-logo-lg me-2">
+                                                        <h6 class="text-muted mb-0">Items from Jumbo</h6>
+                                                    </div>
+                                                    <h4 id="jumboItems" class="mb-0">0 (€0.00)</h4>
+                                                    <small id="jumboSavings" class="text-success">Saved: €0.00</small>
+                                                    <small id="jumboSavingsPerKg" class="text-success d-block">€0.00 per kg cheaper</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Selected Products</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="selectedProducts">
+                            {% for item, product in selected_products.items() %}
+                            <div class="card mb-4 shadow-sm">
+                                <div class="card-header bg-light py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">${item}</h5>
+                                        <span class="store-badge store-${product.store}">
+                                            <img src="${product.store === 'ah' ? 
+                                                'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                                product.store === 'plus' ? '/static/Plus_Logo.svg' :
+                                                '/static/Jumbo_Logo.svg'}" 
+                                                alt="${product.store}" 
+                                                class="store-logo">
+                                            ${product.store.toUpperCase()}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="d-flex">
+                                                <div class="flex-shrink-0" style="width: 120px;">
+                                                    <img src="${product.image}" alt="${product.name}" 
+                                                        class="img-fluid rounded" style="width: 100%; height: 120px; object-fit: contain;">
+                                                </div>
+                                                <div class="flex-grow-1 ms-4">
+                                                    <h5 class="mb-3 text-primary">${product.name}</h5>
+                                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                                        <div>
+                                                            <span class="fs-4 fw-bold">€${formatPrice(product.price)}</span>
+                                                            <span class="text-muted ms-2">${formatUnitSize(product.unit_size)}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="text-muted small mb-3">
+                                                        ${(() => {
+                                                            const pricePerUnit = calculatePricePerUnit(product);
+                                                            if (pricePerUnit === Infinity) return '';
+                                                            const unitType = getUnitType(product);
+                                                            if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                                            if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                                            if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                                            return '';
+                                                        })()}
+                                                    </div>
+                                                    <div class="d-flex gap-2">
+                                                        ${product.link ? `<a href="${product.link}" target="_blank" class="btn btn-outline-primary btn-sm">View Product</a>` : ''}
+                                                        <button onclick="deleteProduct('${item}')" class="btn btn-outline-danger btn-sm">Delete</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 position-relative">
+                                            <div class="border-start h-100 ps-4">
+                                                ${product.comparedWith ? `
+                                                    <div class="comparison-content">
+                                                        <div class="d-flex mb-4">
+                                                            <div class="flex-shrink-0" style="width: 120px;">
+                                                                <img src="${product.comparedWith.image}" alt="${product.comparedWith.name}" 
+                                                                    class="img-fluid rounded" style="width: 100%; height: 120px; object-fit: contain;">
+                                                            </div>
+                                                            <div class="flex-grow-1 ms-4">
+                                                                <div class="store-badge store-${product.comparedWith.store} mb-2" style="position: relative; top: 0;">
+                                                                    <img src="${product.comparedWith.store === 'ah' ? 
+                                                                        'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                                                        product.comparedWith.store === 'plus' ? '/static/Plus_Logo.svg' :
+                                                                        '/static/Jumbo_Logo.svg'}" 
+                                                                        alt="${product.comparedWith.store}" 
+                                                                        class="store-logo">
+                                                                    ${product.comparedWith.store.toUpperCase()}
+                                                                </div>
+                                                                <h5 class="text-primary mb-3">${product.comparedWith.name}</h5>
+                                                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                                                    <div>
+                                                                        <span class="fs-4 fw-bold">€${formatPrice(product.comparedWith.price)}</span>
+                                                                        <span class="text-muted ms-2">${formatUnitSize(product.comparedWith.unit_size)}</span>
+                                                                    </div>
+                                                                </div>
+                                                                <div class="text-muted small mb-3">
+                                                                    ${(() => {
+                                                                        const pricePerUnit = calculatePricePerUnit(product.comparedWith);
+                                                                        if (pricePerUnit === Infinity) return '';
+                                                                        const unitType = getUnitType(product.comparedWith);
+                                                                        if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                                                        if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                                                        if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                                                        return '';
+                                                                    })()}
+                                                                </div>
+                                                                ${product.comparedWith.link ? 
+                                                                    `<a href="${product.comparedWith.link}" target="_blank" class="btn btn-outline-primary btn-sm">View Product</a>` : ''}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div class="comparison-summary bg-light rounded-3 p-4 mt-3">
+                                                            <h6 class="text-center mb-3">Price Comparison</h6>
+                                                            ${(() => {
+                                                                const price1PerKg = product.price_per_unit_value && product.price_per_unit_unit === 'kilo' ?
+                                                                    parseFloat(product.price_per_unit_value) :
+                                                                    calculatePricePerKilo(product);
+                                                                
+                                                                const price2PerKg = product.comparedWith.price_per_unit_value && product.comparedWith.price_per_unit_unit === 'kilo' ?
+                                                                    parseFloat(product.comparedWith.price_per_unit_value) :
+                                                                    calculatePricePerKilo(product.comparedWith);
+                                                                
+                                                                const percentageDiff = ((Math.abs(price1PerKg - price2PerKg) / Math.max(price1PerKg, price2PerKg)) * 100).toFixed(1);
+                                                                const isCheaper = price1PerKg <= price2PerKg;
+                                                                
+                                                                return `
+                                                                    <div class="text-center">
+                                                                        <div class="fs-5 mb-2">
+                                                                            <span class="badge ${isCheaper ? 'bg-success' : 'bg-danger'} p-2">
+                                                                                ${percentageDiff}% ${isCheaper ? 'cheaper' : 'more expensive'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div class="small text-muted">
+                                                                            ${product.store.toUpperCase()}: €${formatPrice(price1PerKg)}/kg<br>
+                                                                            ${product.comparedWith.store.toUpperCase()}: €${formatPrice(price2PerKg)}/kg
+                                                                        </div>
+                                                                    </div>
+                                                                `;
+                                                            })()}
+                                                        </div>
+                                                    </div>
+                                                ` : `
+                                                    <div class="d-flex align-items-center justify-content-center h-100">
+                                                        <div class="text-center text-muted">
+                                                            <div class="mb-3">
+                                                                <i class="bi bi-arrow-left-right" style="font-size: 2rem;"></i>
+                                                            </div>
+                                                            <p class="mb-0">No comparison product selected</p>
+                                                            <button onclick="searchProducts('${item}', 'all')" class="btn btn-outline-primary btn-sm mt-3">
+                                                                Compare Prices
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                `}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product search results -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div id="searchResults"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product modal -->
+    <div class="modal fade" id="productModal" tabindex="-1">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="w-100">
+                        <div class="modal-title-section">
+                            <h5 class="modal-title mb-2">Select a Product</h5>
+                            <div class="text-muted small" id="resultCount"></div>
+                        </div>
+                        <div class="filters-container">
+                            <div class="sort-section">
+                                <!-- Sort buttons -->
+                                <div class="filter-section">
+                                    <div class="filter-header">
+                                        <div class="filter-title">Sort by</div>
+                                    </div>
+                                    <div class="filter-chips">
+                                        <button class="filter-chip" onclick="sortProducts('price')">Total Price</button>
+                                        <button class="filter-chip active" onclick="sortProducts('price_per_unit')">Unit Price</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="main-filters">
+                                <!-- Unit type filters -->
+                                <div class="filter-section">
+                                    <div class="filter-header">
+                                        <div class="filter-title">Product Type</div>
+                                        <div class="filter-subtitle">Filter by unit</div>
+                                    </div>
+                                    <div id="unitTypeFilters" class="filter-chips">
+                                        <!-- Unit type filters will be added here -->
+                                    </div>
+                                </div>
+                                <!-- Keyword filters -->
+                                <div class="filter-section">
+                                    <div class="filter-header">
+                                        <div class="filter-title">Common Features</div>
+                                        <div class="filter-subtitle">Filter by product characteristics</div>
+                                    </div>
+                                    <div id="keywordFilters" class="filter-chips">
+                                        <!-- Keyword filters will be added here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="productModalBody">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- App JavaScript -->
+    <script>
+        let productModal;
+        let currentItem;
+        let currentProducts = [];
+        let filteredProducts = [];
+        let currentUnitTypeFilter = 'all';
+        let selectedProductForComparison = null;
+        let currentKeywordFilter = 'all';
+        let keywordFilters = new Set();
+
+        document.addEventListener('DOMContentLoaded', function() {
+            productModal = new bootstrap.Modal(document.getElementById('productModal'));
+            
+            // Reset state when modal is closed
+            document.getElementById('productModal').addEventListener('hidden.bs.modal', function () {
+                selectedProductForComparison = null;
+                currentUnitTypeFilter = 'all';
+                currentProducts = [];
+                filteredProducts = [];
+            });
+
+            // Add click handler for product cards
+            document.addEventListener('click', function(event) {
+                const productCard = event.target.closest('.product-card');
+                if (productCard) {
+                    selectProductFromElement(productCard);
+                }
+            });
+        });
+
+        function showLoading() {
+            document.getElementById('loading').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function addItem() {
+            const input = document.getElementById('itemInput');
+            const item = input.value.trim();
+            
+            if (!item) return;
+            
+                showLoading();
+                fetch('/add_item', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `item=${encodeURIComponent(item)}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateGroceryList(data.grocery_list);
+                        input.value = '';
+                    }
+                })
+                .finally(() => hideLoading());
+        }
+
+        function resetSummaryStatistics() {
+            // Reset all summary statistics to zero/empty
+            document.getElementById('totalItems').textContent = '0';
+            document.getElementById('totalCost').textContent = '€0,00';
+            document.getElementById('totalSavings').textContent = '€0,00';
+            document.getElementById('totalSavingsPerKg').textContent = '';
+            
+            document.getElementById('ahItems').textContent = '0 (€0,00)';
+            document.getElementById('ahSavings').textContent = '';
+            document.getElementById('ahSavingsPerKg').textContent = '';
+            
+            document.getElementById('jumboItems').textContent = '0 (€0,00)';
+            document.getElementById('jumboSavings').textContent = '';
+            document.getElementById('jumboSavingsPerKg').textContent = '';
+        }
+
+        function removeItem(item) {
+            showLoading();
+            fetch('/remove_item', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `item=${encodeURIComponent(item)}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateGroceryList(data.grocery_list);
+                    // If there are no more items, reset all statistics
+                    if (data.grocery_list.length === 0) {
+                        resetSummaryStatistics();
+                        document.getElementById('selectedProducts').innerHTML = '';
+                    } else {
+                        // Update statistics based on remaining products
+                        updateSummaryStatistics(data.selected_products || {});
+                    }
+                }
+            })
+            .finally(() => hideLoading());
+        }
+
+        function clearList() {
+            showLoading();
+            fetch('/clear_list', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateGroceryList([]);
+                    document.getElementById('selectedProducts').innerHTML = '';
+                    document.getElementById('searchResults').innerHTML = '';
+                    resetSummaryStatistics();
+                }
+            })
+            .finally(() => hideLoading());
+        }
+
+        function getSelectedStores() {
+            const stores = [];
+            if (document.getElementById('ah-checkbox').checked) stores.push('ah');
+            if (document.getElementById('jumbo-checkbox').checked) stores.push('jumbo');
+            if (document.getElementById('plus-checkbox').checked) stores.push('plus');
+            return stores;
+        }
+
+        function searchProducts(item, store = 'all') {
+            showLoading();
+            currentItem = item;
+            
+            // Get selected stores
+            const selectedStores = getSelectedStores();
+            if (selectedStores.length === 0) {
+                alert('Please select at least one supermarket');
+                hideLoading();
+                return;
+            }
+            
+            // If store is 'all', use selected stores, otherwise use the specific store
+            const storeParam = store === 'all' ? selectedStores : [store];
+            
+            fetch('/search_products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    search_term: item,
+                    stores: storeParam
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                    if (data.products && data.products.length > 0) {
+                        displayProducts(data.products, item);
+                        productModal.show();
+                    } else {
+                        alert(`No products found for "${item}". Please try a different search term.`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(`Error searching for products: ${error.message}`);
+            })
+            .finally(() => hideLoading());
+        }
+
+        function displayProducts(products, item) {
+            currentProducts = products;
+            filteredProducts = products;
+            
+            // Update result count
+            document.getElementById('resultCount').textContent = `Found ${products.length} products for "${item}"`;
+            
+            // Reset filters
+            currentUnitTypeFilter = 'all';
+            currentKeywordFilter = 'all';
+            
+            // Update filters
+            updateUnitTypeFilters(products);
+            updateKeywordFilters(products);
+            
+            // Display products
+            displayProductsAfterSort(products, item);
+        }
+
+        function displayProductsAfterSort(products, item, selectedProduct = null) {
+            const modalBody = document.getElementById('productModalBody');
+            
+            if (selectedProduct) {
+                // Filter products to show only those from different stores
+                const filteredProducts = products.filter(p => {
+                    const differentStore = p.store !== selectedProduct.store;
+                    const isValidProduct = p.price && p.unit_size; // Ensure product has required data
+                    const isNotSelected = p !== selectedProduct; // Make sure it's not the selected product
+                    return differentStore && isValidProduct && isNotSelected;
+                });
+
+                // Calculate price per kg for selected product
+                const selectedPricePerKg = selectedProduct.price_per_unit_value && selectedProduct.price_per_unit_unit === 'kilo' ?
+                    parseFloat(selectedProduct.price_per_unit_value) :
+                    calculatePricePerKilo(selectedProduct);
+
+                // Show selected product at the top
+                const selectedHTML = `
+                    <div class="alert alert-info mb-4">
+                        <div class="d-flex align-items-center">
+                            <img src="${selectedProduct.image}" style="width: 60px; height: 60px; object-fit: contain;" class="me-3">
+                            <div>
+                                <h5 class="mb-1">Selected for comparison:</h5>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-3">${selectedProduct.name}</span>
+                                    <span class="badge bg-${selectedProduct.store} me-2">${selectedProduct.store.toUpperCase()}</span>
+                                    <span class="fw-bold">€${formatPrice(selectedProduct.price)}</span>
+                                    ${selectedPricePerKg !== Infinity ? `
+                                        <span class="text-muted ms-2">
+                                            (€${formatPrice(selectedPricePerKg)}/kg)
+                                        </span>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <h6 class="mb-3">Select a competitor's product to compare:</h6>
+                `;
+
+                // Sort competitor products by price per unit
+                filteredProducts.sort((a, b) => {
+                    const priceAPerKg = a.price_per_unit_value && a.price_per_unit_unit === 'kilo' ?
+                        parseFloat(a.price_per_unit_value) :
+                        calculatePricePerKilo(a);
+                    const priceBPerKg = b.price_per_unit_value && b.price_per_unit_unit === 'kilo' ?
+                        parseFloat(b.price_per_unit_value) :
+                        calculatePricePerKilo(b);
+                    return priceAPerKg - priceBPerKg;
+                });
+
+                // Create competitor product cards
+                const productsHTML = filteredProducts.map(product => {
+                    const pricePerKg = product.price_per_unit_value && product.price_per_unit_unit === 'kilo' ?
+                        parseFloat(product.price_per_unit_value) :
+                        calculatePricePerKilo(product);
+                    
+                    // Safely encode product data for data attribute
+                    const safeProduct = encodeURIComponent(JSON.stringify(product));
+                    
+                    return `
+                        <div class="card mb-3 product-card" data-product='${safeProduct}'>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <img src="${product.image}" class="img-fluid product-image" alt="${product.name}">
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="card-title">${product.name}</h5>
+                                            <span class="store-badge store-${product.store}">
+                                                <img src="${product.store === 'ah' ? 
+                                                    'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                                    product.store === 'jumbo' ? '/static/Jumbo_Logo.svg' : '/static/Plus_Logo.svg'}" 
+                                                    alt="${product.store}" 
+                                                    class="store-logo">
+                                                ${product.store.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fs-4 fw-bold">€${formatPrice(product.price)}</span>
+                                                <span class="text-muted ms-2">${formatUnitSize(product.unit_size)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small mb-3">
+                                            ${(() => {
+                                                const pricePerUnit = calculatePricePerUnit(product);
+                                                if (pricePerUnit === Infinity) return '';
+                                                const unitType = getUnitType(product);
+                                                if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                                if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                                if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                                return '';
+                                            })()}
+                                        </div>
+                                        ${product.link ? `<a href="${product.link}" target="_blank" class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation()">View Product</a>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                modalBody.innerHTML = selectedHTML + (filteredProducts.length > 0 ? productsHTML : '<div class="alert alert-warning">No comparable products found from other stores.</div>');
+            } else {
+                // Regular product display (first selection)
+                const productsHTML = products.map(product => {
+                    const pricePerKg = product.price_per_unit_value && product.price_per_unit_unit === 'kilo' ?
+                        parseFloat(product.price_per_unit_value) :
+                        calculatePricePerKilo(product);
+                    
+                    // Safely encode product data for data attribute
+                    const safeProduct = encodeURIComponent(JSON.stringify(product));
+                    
+                    return `
+                        <div class="card mb-3 product-card" data-product='${safeProduct}'>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <img src="${product.image}" class="img-fluid product-image" alt="${product.name}">
+                                    </div>
+                                    <div class="col-md-10">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <h5 class="card-title">${product.name}</h5>
+                                            <span class="store-badge store-${product.store}">
+                                                <img src="${product.store === 'ah' ? 
+                                                    'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                                    product.store === 'jumbo' ? '/static/Jumbo_Logo.svg' : '/static/Plus_Logo.svg'}" 
+                                                    alt="${product.store}" 
+                                                    class="store-logo">
+                                                ${product.store.toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fs-4 fw-bold">€${formatPrice(product.price)}</span>
+                                                <span class="text-muted ms-2">${formatUnitSize(product.unit_size)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small mb-3">
+                                            ${(() => {
+                                                const pricePerUnit = calculatePricePerUnit(product);
+                                                if (pricePerUnit === Infinity) return '';
+                                                const unitType = getUnitType(product);
+                                                if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                                if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                                if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                                return '';
+                                            })()}
+                                        </div>
+                                        ${product.link ? `<a href="${product.link}" target="_blank" class="btn btn-outline-primary btn-sm mt-2" onclick="event.stopPropagation()">View Product</a>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                modalBody.innerHTML = productsHTML;
+            }
+        }
+
+        function selectProduct(product) {
+            console.log('selectProduct called with:', product);
+            if (!currentItem) {
+                console.log('No currentItem set');
+                return;
+            }
+            
+            if (!selectedProductForComparison) {
+                console.log('First selection - storing for comparison');
+                // First selection - store for comparison
+                selectedProductForComparison = product;
+                document.querySelector('.modal-title').textContent = 'Compare with Competitors';
+                
+                // Reset filter to show all compatible products initially
+                currentUnitTypeFilter = 'all';
+                updateUnitTypeFilters(currentProducts);
+                
+                // Display products with the selected product
+                displayProductsAfterSort(currentProducts, currentItem, product);
+            } else {
+                console.log('Second selection - showing comparison');
+                // Second selection - show comparison summary
+                compareAndSelectProduct(product);
+            }
+        }
+
+        function getComparisonPrice(product1, product2) {
+            // Get price per kg for both products
+            const price1PerKg = product1.price_per_unit_value && product1.price_per_unit_unit === 'kilo' ?
+                parseFloat(product1.price_per_unit_value) :
+                calculatePricePerKilo(product1);
+            
+            const price2PerKg = product2.price_per_unit_value && product2.price_per_unit_unit === 'kilo' ?
+                parseFloat(product2.price_per_unit_value) :
+                calculatePricePerKilo(product2);
+            
+            // If both products have a valid price per kg, use that for comparison
+            if (price1PerKg !== Infinity && price2PerKg !== Infinity) {
+                return {
+                    price1: price1PerKg,
+                    price2: price2PerKg,
+                    useTotal: false
+                };
+            }
+            
+            // If either product doesn't have a price per kg, use total price
+            return {
+                price1: parseFloat(product1.price),
+                price2: parseFloat(product2.price),
+                useTotal: true
+            };
+        }
+
+        function compareAndSelectProduct(competitorProduct) {
+            if (!selectedProductForComparison || !competitorProduct) return;
+            
+            // Get comparison prices
+            const prices = getComparisonPrice(selectedProductForComparison, competitorProduct);
+            const isCheaper = prices.price1 < prices.price2;
+            const priceDiff = Math.abs(prices.price1 - prices.price2);
+            const percentageDiff = ((priceDiff / prices.price2) * 100).toFixed(1);
+            
+            // Create clean copies of the products without circular references
+            const selectedProductCopy = { ...selectedProductForComparison };
+            const competitorProductCopy = { ...competitorProduct };
+            delete selectedProductCopy.comparedWith;
+            delete competitorProductCopy.comparedWith;
+            
+            // Store the comparison data
+            selectedProductCopy.comparedWith = competitorProductCopy;
+            competitorProductCopy.comparedWith = selectedProductCopy;
+            
+            const modalBody = document.getElementById('productModalBody');
+            modalBody.innerHTML = `
+                <div class="alert ${isCheaper ? 'alert-success' : 'alert-warning'} mb-4">
+                    <h5 class="mb-3">Price Comparison Results:</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Your Selection (${selectedProductForComparison.store.toUpperCase()}):</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="${selectedProductForComparison.image}" style="width: 50px; height: 50px; object-fit: contain;" class="me-3">
+                                <div>
+                                    <strong>${selectedProductForComparison.name}</strong>
+                                    <br>
+                                    <span class="text-primary">€${formatPrice(selectedProductForComparison.price)}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Competitor Product (${competitorProduct.store.toUpperCase()}):</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="${competitorProduct.image}" style="width: 50px; height: 50px; object-fit: contain;" class="me-3">
+                                <div>
+                                    <strong>${competitorProduct.name}</strong>
+                                    <br>
+                                    <span class="text-primary">€${formatPrice(competitorProduct.price)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-center mt-3">
+                        <div class="alert ${isCheaper ? 'alert-success' : 'alert-danger'} mb-3">
+                            <h5 class="mb-0">
+                                The ${selectedProductForComparison.store.toUpperCase()} product is 
+                                ${percentageDiff}% ${isCheaper ? 'cheaper' : 'more expensive'}
+                            </h5>
+                        </div>
+                        <div class="row justify-content-center">
+                            <div class="col-md-8">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th>Price Difference:</th>
+                                        <td>€${formatPrice(priceDiff)}</td>
+                                    </tr>
+                                    ${!prices.useTotal ? `
+                                        <tr>
+                                            <th>Unit Price Comparison:</th>
+                                            <td>
+                                                ${selectedProductForComparison.store.toUpperCase()}: €${formatPrice(prices.price1)}/kg<br>
+                                                ${competitorProduct.store.toUpperCase()}: €${formatPrice(prices.price2)}/kg
+                                            </td>
+                                        </tr>
+                                    ` : ''}
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <button onclick="finalizeSelection('${encodeURIComponent(JSON.stringify({
+                                ...competitorProduct,
+                                comparedWith: selectedProductForComparison
+                            }))}')" 
+                                    class="btn ${isCheaper ? 'btn-outline-primary' : 'btn-primary'}">
+                                Select ${competitorProduct.store.toUpperCase()} Product
+                            </button>
+                            <button onclick="finalizeSelection('${encodeURIComponent(JSON.stringify({
+                                ...selectedProductForComparison,
+                                comparedWith: competitorProduct,
+                                keepOriginal: true
+                            }))}')" 
+                                    class="btn ${isCheaper ? 'btn-primary' : 'btn-outline-primary'} ms-2">
+                                Keep ${selectedProductForComparison.store.toUpperCase()} Product
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function finalizeSelection(productData) {
+            showLoading();
+            
+            try {
+                // Decode and parse the product data
+                const data = JSON.parse(decodeURIComponent(productData));
+                const keepOriginal = data.keepOriginal;
+                delete data.keepOriginal;
+                
+                // Create clean copies of the products without circular references
+                const selectedProduct = { ...data };
+                const comparedProduct = { ...data.comparedWith };
+                delete selectedProduct.comparedWith;
+                delete comparedProduct.comparedWith;
+
+                // Add the comparison data
+                selectedProduct.comparedWith = comparedProduct;
+                
+                // Send the selection to the server
+                fetch('/select_product', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        item: currentItem,
+                        product: selectedProduct,
+                        compared_with: comparedProduct
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        updateSelectedProducts(data.selected_products);
+                        const productModal = document.getElementById('productModal');
+                        const bootstrapModal = bootstrap.Modal.getInstance(productModal);
+                        bootstrapModal.hide();
+                        selectedProductForComparison = null;
+                    } else {
+                        console.error('Failed to select product:', data.error);
+                        alert('Failed to select product. Please try again.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error selecting product:', error);
+                    alert('An error occurred while selecting the product. Please try again.');
+                })
+                .finally(() => hideLoading());
+            } catch (error) {
+                console.error('Error parsing product data:', error);
+                alert('An error occurred while processing the product data. Please try again.');
+                hideLoading();
+            }
+        }
+
+        function updateGroceryList(list) {
+            const ul = document.getElementById('groceryList');
+            ul.innerHTML = list.map(item => `
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                    ${item}
+                    <div>
+                            <button class="btn btn-sm btn-success me-2" onclick="searchProducts('${item}', 'all')">Search</button>
+                        <button class="btn btn-sm btn-danger" onclick="removeItem('${item}')">Remove</button>
+                        </div>
+                    </div>
+                </li>
+            `).join('');
+        }
+
+        function getWeightInKg(unitSize) {
+            if (!unitSize) return 0;
+            
+            const unitSize_clean = unitSize.toLowerCase().trim();
+            
+            // Handle kg units
+            if (unitSize_clean.includes('kg') || unitSize_clean.includes('kilo')) {
+                const match = unitSize_clean.match(/(\d+(?:[.,]\d+)?)\s*k(?:ilo|g)/);
+                if (match) {
+                    return parseFloat(match[1].replace(',', '.'));
+                }
+            }
+            
+            // Handle gram units
+            if (unitSize_clean.includes('g') || unitSize_clean.includes('gram')) {
+                const match = unitSize_clean.match(/(\d+(?:[.,]\d+)?)\s*g(?:ram)?/);
+                if (match) {
+                    return parseFloat(match[1].replace(',', '.')) / 1000;
+                }
+            }
+            
+            return 0;
+        }
+
+        function calculatePricePerKilo(product) {
+            if (!product.price || !product.unit_size) return Infinity;
+            
+            const price = typeof product.price === 'string' ? 
+                parseFloat(product.price.replace(/[^0-9.,]/g, '').replace(',', '.')) : 
+                product.price;
+            
+            const unitSize = product.unit_size.toLowerCase().trim();
+            let grams = 0;
+            
+            if (unitSize.includes('kg') || unitSize.includes('kilo')) {
+                const match = unitSize.match(/(\d+(?:[.,]\d+)?)\s*k(?:ilo|g)/);
+                if (match) {
+                    grams = parseFloat(match[1].replace(',', '.')) * 1000;
+                }
+            } else {
+                const match = unitSize.match(/(\d+(?:[.,]\d+)?)\s*g(?:ram)?/) || unitSize.match(/^(\d+(?:[.,]\d+)?)$/);
+                if (match) {
+                    grams = parseFloat(match[1].replace(',', '.'));
+                }
+            }
+            
+            if (grams > 0) {
+                return (price / grams) * 1000; // Convert to price per kg
+            }
+            
+            return Infinity;
+        }
+
+        function sortProducts(sortBy) {
+            // Use currentItem instead of searchInput value
+            if (!currentItem) return;
+            
+            // Get selected stores
+            const selectedStores = getSelectedStores();
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'flex';
+            
+            // Make API call with sort parameter
+            fetch('/search_products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    search_term: currentItem,
+                    stores: selectedStores,
+                    sort_by: sortBy
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.products && data.products.length > 0) {
+                    displayProducts(data.products, currentItem);
+                } else {
+                    alert(`No products found for "${currentItem}". Please try a different search term.`);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sorting products');
+            })
+            .finally(() => {
+                document.getElementById('loading').style.display = 'none';
+            });
+        }
+
+        function formatPrice(price) {
+            return parseFloat(price).toFixed(2).replace('.', ',');
+        }
+
+        function formatUnitSize(unitSize) {
+            if (!unitSize) return '';
+            return unitSize.toLowerCase()
+                .replace(/per\s+/i, '')
+                .replace(/(\d+)g/, '$1 g')
+                .replace(/(\d+)kg/, '$1 kg')
+                .replace(/(\d+)stuk/, '$1 stuk');
+        }
+
+        // Handle Enter key in input field
+        document.getElementById('itemInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addItem();
+            }
+        });
+
+        function deleteProduct(item) {
+            showLoading();
+            fetch('/delete_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ item: item })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Update the selected products display
+                    document.getElementById('selectedProducts').innerHTML = '';
+                    Object.entries(data.selected_products).forEach(([item, product]) => {
+                        // Re-render the product cards
+                        const productCard = createProductCard(item, product);
+                        document.getElementById('selectedProducts').appendChild(productCard);
+                    });
+                    // Update summary statistics
+                    updateSummaryStatistics(data.selected_products);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting product');
+            })
+            .finally(() => hideLoading());
+        }
+
+        function createProductCard(item, product) {
+            const card = document.createElement('div');
+            card.className = 'card mb-3 position-relative';
+            
+            // Calculate price per kg
+            const pricePerKg = product.price_per_unit_value && product.price_per_unit_unit === 'kilo' ?
+                parseFloat(product.price_per_unit_value) :
+                calculatePricePerKilo(product);
+            
+            // Calculate savings if there's a compared product
+            let savingsHtml = '';
+            if (product.comparedWith) {
+                // Get comparison prices using the same logic as in compareAndSelectProduct
+                const prices = getComparisonPrice(product, product.comparedWith);
+                const isCheaper = prices.price1 < prices.price2;
+                const priceDiff = Math.abs(prices.price1 - prices.price2);
+                const percentageDiff = ((priceDiff / prices.price2) * 100).toFixed(1);
+                
+                savingsHtml = `
+                    <div class="col-md-6 position-relative">
+                        <div class="border-start h-100 ps-4">
+                            <div class="comparison-content">
+                                <div class="d-flex mb-4">
+                                    <div class="flex-shrink-0" style="width: 120px;">
+                                        <img src="${product.comparedWith.image}" alt="${product.comparedWith.name}" 
+                                            class="img-fluid rounded" style="width: 100%; height: 120px; object-fit: contain;">
+                                    </div>
+                                    <div class="flex-grow-1 ms-4">
+                                        <div class="store-badge store-${product.comparedWith.store} mb-2" style="position: relative; top: 0;">
+                                            <img src="${product.comparedWith.store === 'ah' ? 
+                                                'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                                product.comparedWith.store === 'plus' ? '/static/Plus_Logo.svg' :
+                                                '/static/Jumbo_Logo.svg'}" 
+                                                alt="${product.comparedWith.store}" 
+                                                class="store-logo">
+                                            ${product.comparedWith.store.toUpperCase()}
+                                        </div>
+                                        <h5 class="text-primary mb-3">${product.comparedWith.name}</h5>
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div>
+                                                <span class="fs-4 fw-bold">€${formatPrice(product.comparedWith.price)}</span>
+                                                <span class="text-muted ms-2">${formatUnitSize(product.comparedWith.unit_size)}</span>
+                                            </div>
+                                        </div>
+                                        <div class="text-muted small mb-3">
+                                            ${(() => {
+                                                const pricePerUnit = calculatePricePerUnit(product.comparedWith);
+                                                if (pricePerUnit === Infinity) return '';
+                                                const unitType = getUnitType(product.comparedWith);
+                                                if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                                if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                                if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                                return '';
+                                            })()}
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="comparison-summary bg-light rounded-3 p-4 mt-3">
+                                    <h6 class="text-center mb-3">Price Comparison</h6>
+                                    <div class="text-center">
+                                        <div class="fs-5 mb-2">
+                                            <span class="badge ${isCheaper ? 'bg-success' : 'bg-danger'} p-2">
+                                                ${percentageDiff}% ${isCheaper ? 'cheaper' : 'more expensive'}
+                                            </span>
+                                        </div>
+                                        ${!prices.useTotal ? `
+                                            <div class="small text-muted">
+                                                ${product.store.toUpperCase()}: €${formatPrice(prices.price1)}/kg<br>
+                                                ${product.comparedWith.store.toUpperCase()}: €${formatPrice(prices.price2)}/kg
+                                            </div>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            card.innerHTML = `
+                <div class="card-header bg-light py-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">${item}</h5>
+                        <span class="store-badge store-${product.store}">
+                            <img src="${product.store === 'ah' ? 
+                                'https://upload.wikimedia.org/wikipedia/commons/e/eb/Albert_Heijn_Logo.svg' : 
+                                product.store === 'plus' ? '/static/Plus_Logo.svg' :
+                                '/static/Jumbo_Logo.svg'}" 
+                                alt="${product.store}" 
+                                class="store-logo">
+                            ${product.store.toUpperCase()}
+                        </span>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <div class="col-md-${product.comparedWith ? '6' : '12'}">
+                            <div class="d-flex">
+                                <div class="flex-shrink-0" style="width: 120px;">
+                                    <img src="${product.image}" alt="${product.name}" 
+                                        class="img-fluid rounded" style="width: 100%; height: 120px; object-fit: contain;">
+                                </div>
+                                <div class="flex-grow-1 ms-4">
+                                    <h5 class="mb-3 text-primary">${product.name}</h5>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div>
+                                            <span class="fs-4 fw-bold">€${formatPrice(product.price)}</span>
+                                            <span class="text-muted ms-2">${formatUnitSize(product.unit_size)}</span>
+                                        </div>
+                                    </div>
+                                    <div class="text-muted small mb-3">
+                                        ${(() => {
+                                            const pricePerUnit = calculatePricePerUnit(product);
+                                            if (pricePerUnit === Infinity) return '';
+                                            const unitType = getUnitType(product);
+                                            if (unitType === 'piece') return `€${formatPrice(pricePerUnit)}/stuk`;
+                                            if (unitType === 'slice') return `€${formatPrice(pricePerUnit)}/plak`;
+                                            if (unitType === 'weight') return `€${formatPrice(pricePerUnit)}/kg`;
+                                            return '';
+                                        })()}
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        ${product.link ? `<a href="${product.link}" target="_blank" class="btn btn-outline-primary btn-sm">View Product</a>` : ''}
+                                        <button onclick="deleteProduct('${item}')" class="btn btn-outline-danger btn-sm">Delete</button>
+                                        ${!product.comparedWith ? `<button onclick="searchProducts('${item}', 'all')" class="btn btn-outline-primary btn-sm">Compare Prices</button>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        ${savingsHtml}
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function getUnitType(product) {
+            if (!product || !product.unit_size) return 'unknown';
+            
+            const unitSize = product.unit_size.toLowerCase().trim();
+            const name = (product.name || '').toLowerCase().trim();
+            
+            // For cheese products, check both the unit size and name
+            const isCheeseProduct = name.includes('kaas');
+            
+            // Check for slices in both unit size and name
+            const hasSlices = unitSize.includes('plak') || name.includes('plak');
+            
+            // Check for weight in unit size
+            const hasWeight = unitSize.includes('kg') || unitSize.includes('g') || unitSize.match(/^\d+$/);
+            
+            // For cheese products, prioritize slice-based comparison if slices are mentioned
+            if (isCheeseProduct && hasSlices) {
+                return 'slice';
+            }
+            
+            // Then check other standard types
+            if (unitSize.includes('stuk')) return 'piece';
+            if (hasWeight) return 'weight';
+            
+            return 'unknown';
+        }
+
+        function updateUnitTypeFilters(products) {
+            const unitTypeFilters = document.getElementById('unitTypeFilters');
+            const unitTypes = new Set();
+            
+            // Collect all unit types
+            products.forEach(product => {
+                const unitType = getUnitType(product);
+                unitTypes.add(unitType);
+            });
+            
+            // Create filter chips HTML
+            const filterChips = ['all', ...unitTypes].map(type => {
+                const count = type === 'all' ? 
+                    products.length : 
+                    products.filter(p => getUnitType(p) === type).length;
+                
+                const label = type === 'piece' ? 'Per stuk' :
+                            type === 'slice' ? 'Per plak' :
+                            type === 'weight' ? 'Per gewicht' :
+                            type === 'unknown' ? 'Overig' : 'Alle';
+                
+                return `
+                    <button class="filter-chip ${type === currentUnitTypeFilter ? 'active' : ''}" 
+                            onclick="filterByUnitType('${type}')">
+                        ${label}
+                        <span class="count">${count}</span>
+                    </button>
+                `;
+            }).join('');
+            
+            unitTypeFilters.innerHTML = filterChips;
+        }
+
+        function filterByUnitType(type) {
+            currentUnitTypeFilter = type;
+            
+            // Update active state of filter chips
+            document.querySelectorAll('#unitTypeFilters .filter-chip').forEach(chip => {
+                chip.classList.toggle('active', chip.textContent.includes(
+                    type === 'piece' ? 'Per stuk' :
+                    type === 'slice' ? 'Per plak' :
+                    type === 'weight' ? 'Per gewicht' :
+                    type === 'unknown' ? 'Overig' : 'Alle'
+                ));
+            });
+            
+            // Filter products
+            filteredProducts = type === 'all' ? 
+                currentProducts : 
+                currentProducts.filter(p => getUnitType(p) === type);
+            
+            // Update display
+            displayProductsAfterSort(filteredProducts, currentItem, selectedProductForComparison);
+        }
+
+        function extractKeywords(products) {
+            const keywords = new Map();
+            const stopWords = new Set([
+                'de', 'het', 'een', 'en', 'of', 'met', 'van', 'per', 'voor', 'door',
+                'kg', 'gram', 'g', 'ml', 'l', 'stuk', 'stuks', 'pizza', 'pizzas',
+                'dr', 'di', 'la', 'le', 'el', 'the', 'and', 'ca', 'cm'
+            ]);
+            
+            // First pass: collect all words and their frequencies
+            products.forEach(product => {
+                const name = product.name.toLowerCase();
+                // Split on spaces and special characters
+                const words = name.split(/[\s,\-\/\(\)]+/)
+                    .map(word => word.trim())
+                    .filter(word => {
+                        // Remove common words and short terms
+                        return word.length > 2 && 
+                               !/^\d+$/.test(word) && 
+                               !stopWords.has(word) &&
+                               !word.startsWith('€');
+                    });
+
+                words.forEach(word => {
+                    keywords.set(word, (keywords.get(word) || 0) + 1);
+                });
+            });
+
+            // Convert to array and sort by frequency
+            const sortedKeywords = Array.from(keywords.entries())
+                .filter(([word, count]) => {
+                    // Only keep words that appear in at least 10% of products
+                    const minOccurrences = Math.max(2, Math.ceil(products.length * 0.1));
+                    return count >= minOccurrences;
+                })
+                .sort((a, b) => b[1] - a[1]) // Sort by frequency
+                .slice(0, 15) // Take top 15 most frequent terms
+                .map(([keyword, count]) => ({
+                    keyword,
+                    count
+                }));
+
+            return sortedKeywords;
+        }
+
+        function updateKeywordFilters(products) {
+            const keywordFilters = document.getElementById('keywordFilters');
+            const keywords = extractKeywords(products);
+            
+            // Create filter chips HTML
+            let filterChips = `
+                <button class="filter-chip ${currentKeywordFilter === 'all' ? 'active' : ''}" 
+                        onclick="filterByKeyword('all')">
+                    Alle
+                    <span class="count">${products.length}</span>
+                </button>
+            `;
+            
+            // Add chips for keywords
+            keywords.forEach(({keyword, count}) => {
+                // Format the display label
+                const label = keyword
+                    .split('_')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+                
+                filterChips += `
+                    <button class="filter-chip ${currentKeywordFilter === keyword ? 'active' : ''}" 
+                            onclick="filterByKeyword('${keyword}')">
+                        ${label}
+                        <span class="count">${count}</span>
+                    </button>
+                `;
+            });
+            
+            keywordFilters.innerHTML = filterChips;
+        }
+
+        function filterByKeyword(keyword) {
+            currentKeywordFilter = keyword;
+            
+            // Update active state of filter chips
+            document.querySelectorAll('#keywordFilters .filter-chip').forEach(chip => {
+                const chipText = chip.textContent.replace(/\d+$/, '').trim().toLowerCase();
+                const keywordText = keyword.toLowerCase();
+                chip.classList.toggle('active', chipText === keywordText || (keyword === 'all' && chipText === 'alle'));
+            });
+            
+            // Filter products
+            filteredProducts = keyword === 'all' ? 
+                currentProducts : 
+                currentProducts.filter(product => {
+                    const name = product.name.toLowerCase();
+                    return name.includes(keyword.toLowerCase());
+                });
+            
+            // Apply unit type filter if active
+            if (currentUnitTypeFilter !== 'all') {
+                filteredProducts = filteredProducts.filter(p => 
+                    getUnitType(p) === currentUnitTypeFilter);
+            }
+            
+            // Update display
+            displayProductsAfterSort(filteredProducts, currentItem, selectedProductForComparison);
+        }
+
+        function calculatePricePerUnit(product) {
+            if (!product || !product.price || !product.unit_size) return Infinity;
+            
+            const price = typeof product.price === 'string' ? 
+                parseFloat(product.price.replace(/[^0-9.,]/g, '').replace(',', '.')) : 
+                product.price;
+            
+            const unitSize = product.unit_size.toLowerCase().trim();
+            const name = (product.name || '').toLowerCase().trim();
+            
+            // First check if there's a pre-calculated price per unit
+            if (product.price_per_unit_value) {
+                return product.price_per_unit_value;
+            }
+            
+            // Handle items sold per piece
+            if (unitSize.includes('stuk') || name.includes('stuk')) {
+                const match = unitSize.match(/(\d+)\s*stuk/) || name.match(/(\d+)\s*stuk/);
+                if (match) {
+                    const pieces = parseInt(match[1]);
+                    return price / pieces;
+                }
+                // If no specific number of pieces is found, assume 1 piece
+                return price;
+            }
+            
+            // Handle items sold per slice
+            if (unitSize.includes('plak') || name.includes('plak')) {
+                const match = unitSize.match(/(\d+)\s*plak/) || name.match(/(\d+)\s*plak/);
+                if (match) {
+                    const slices = parseInt(match[1]);
+                    return price / slices;
+                }
+                return price;
+            }
+            
+            // Handle weight-based items
+            let grams = 0;
+            
+            // Handle kilogram units
+            if (unitSize.includes('kg') || unitSize.includes('kilo')) {
+                const match = unitSize.match(/(\d+(?:[.,]\d+)?)\s*k(?:ilo|g)/);
+                if (match) {
+                    grams = parseFloat(match[1].replace(',', '.')) * 1000;
+                }
+            } 
+            // Handle gram units
+            else if (unitSize.includes('g') || unitSize.includes('gram') || unitSize.match(/^\d+$/)) {
+                const match = unitSize.match(/(\d+(?:[.,]\d+)?)\s*g(?:ram)?/) || unitSize.match(/^(\d+(?:[.,]\d+)?)$/);
+                if (match) {
+                    grams = parseFloat(match[1].replace(',', '.'));
+                }
+            }
+            
+            if (grams > 0) {
+                return (price / grams) * 1000; // Convert to price per kg
+            }
+            
+            return price; // Default to price if no unit conversion possible
+        }
+
+        function getPriceDifferenceLabel(product1, product2) {
+            const unitSize1 = (product1.unit_size || '').toLowerCase().trim();
+            const unitSize2 = (product2.unit_size || '').toLowerCase().trim();
+            
+            // If both products have stuks, use per piece
+            if (unitSize1.includes('stuk') && unitSize2.includes('stuk')) {
+                return 'per stuk';
+            }
+            
+            // If both products have plakken, use per slice
+            if (unitSize1.includes('plak') && unitSize2.includes('plak')) {
+                return 'per plak';
+            }
+            
+            // Default to per kg
+            return 'per kg';
+        }
+
+        function calculateTotalSavings(cheaperProduct, expensiveProduct) {
+            const unitSize1 = (cheaperProduct.unit_size || '').toLowerCase().trim();
+            const unitSize2 = (expensiveProduct.unit_size || '').toLowerCase().trim();
+            
+            // Get prices per unit
+            const price1 = calculatePricePerUnit(cheaperProduct);
+            const price2 = calculatePricePerUnit(expensiveProduct);
+            
+            // Calculate the difference per unit
+            const savingsPerUnit = price2 - price1;
+            
+            // If both are piece-based, calculate savings per piece
+            if (unitSize1.includes('stuk') && unitSize2.includes('stuk')) {
+                return savingsPerUnit;
+            }
+            
+            // If both are slice-based, calculate savings per slice
+            if (unitSize1.includes('plak') && unitSize2.includes('plak')) {
+                return savingsPerUnit;
+            }
+            
+            // For weight-based items, calculate savings per kg
+            return savingsPerUnit;
+        }
+
+        // Add new function to handle product selection from element
+        function selectProductFromElement(element) {
+            console.log('selectProductFromElement called');
+            const productData = element.getAttribute('data-product');
+            console.log('Product data:', productData);
+            if (!productData) {
+                console.error('No product data found');
+                return;
+            }
+            
+            try {
+                const product = JSON.parse(decodeURIComponent(productData));
+                console.log('Parsed product:', product);
+                selectProduct(product);
+            } catch (error) {
+                console.error('Error parsing product data:', error);
+            }
+        }
+
+        function updateSelectedProducts(selectedProducts) {
+            const container = document.getElementById('selectedProducts');
+            container.innerHTML = '';
+            
+            Object.entries(selectedProducts).forEach(([item, product]) => {
+                const productCard = createProductCard(item, product);
+                container.appendChild(productCard);
+            });
+            
+            // Update summary statistics
+            updateSummaryStatistics(selectedProducts);
+        }
+
+        function resetComparison() {
+            // Create clean copies of the products without circular references
+            const selectedProduct = { ...selectedProductForComparison };
+            const competitorProduct = { ...selectedProductForComparison.comparedWith };
+            
+            // Ensure all required fields are copied
+            selectedProduct.store = selectedProductForComparison.store;
+            selectedProduct.name = selectedProductForComparison.name;
+            selectedProduct.price = selectedProductForComparison.price;
+            selectedProduct.unit_size = selectedProductForComparison.unit_size;
+            selectedProduct.image = selectedProductForComparison.image;
+            selectedProduct.link = selectedProductForComparison.link;
+            selectedProduct.price_per_unit_value = selectedProductForComparison.price_per_unit_value;
+            selectedProduct.price_per_unit_unit = selectedProductForComparison.price_per_unit_unit;
+
+            competitorProduct.store = selectedProductForComparison.comparedWith.store;
+            competitorProduct.name = selectedProductForComparison.comparedWith.name;
+            competitorProduct.price = selectedProductForComparison.comparedWith.price;
+            competitorProduct.unit_size = selectedProductForComparison.comparedWith.unit_size;
+            competitorProduct.image = selectedProductForComparison.comparedWith.image;
+            competitorProduct.link = selectedProductForComparison.comparedWith.link;
+            competitorProduct.price_per_unit_value = selectedProductForComparison.comparedWith.price_per_unit_value;
+            competitorProduct.price_per_unit_unit = selectedProductForComparison.comparedWith.price_per_unit_unit;
+
+            delete selectedProduct.comparedWith;
+            delete competitorProduct.comparedWith;
+
+            // Calculate price comparison
+            const selectedPricePerUnit = selectedProduct.price_per_unit_value && selectedProduct.price_per_unit_unit === 'kilo' ?
+                parseFloat(selectedProduct.price_per_unit_value) :
+                calculatePricePerKilo(selectedProduct);
+                
+            const competitorPricePerUnit = competitorProduct.price_per_unit_value && competitorProduct.price_per_unit_unit === 'kilo' ?
+                parseFloat(competitorProduct.price_per_unit_value) :
+                calculatePricePerKilo(competitorProduct);
+            
+            // Determine which product is cheaper
+            const isCheaper = selectedPricePerUnit < competitorPricePerUnit;
+            
+            // Add the comparison data
+            selectedProduct.comparedWith = competitorProduct;
+            
+            // Send the selection to the server
+            showLoading();
+            fetch('/select_product', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    item: currentItem,
+                    product: selectedProduct,
+                    compared_with: competitorProduct
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateSelectedProducts(data.selected_products);
+                    const productModal = document.getElementById('productModal');
+                    const bootstrapModal = bootstrap.Modal.getInstance(productModal);
+                    bootstrapModal.hide();
+                    selectedProductForComparison = null;
+                } else {
+                    console.error('Failed to select product:', data.error);
+                    alert('Failed to select product. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error selecting product:', error);
+                alert('An error occurred while selecting the product. Please try again.');
+            })
+            .finally(() => hideLoading());
+        }
+
+        function updateSummaryStatistics(selectedProducts) {
+            let totalItems = 0;
+            let totalCost = 0;
+            let totalSavings = 0;
+            let ahItems = 0;
+            let ahCost = 0;
+            let ahSavings = 0;
+            let jumboItems = 0;
+            let jumboCost = 0;
+            let jumboSavings = 0;
+
+            // Calculate statistics
+            Object.values(selectedProducts).forEach(product => {
+                totalItems++;
+                totalCost += parseFloat(product.price);
+
+                if (product.comparedWith) {
+                    // Use the same comparison logic as in the product comparison
+                    const prices = getComparisonPrice(product, product.comparedWith);
+                    const isCheaper = prices.price1 < prices.price2;
+                    const priceDiff = Math.abs(prices.price1 - prices.price2);
+
+                    if (isCheaper) {
+                        if (prices.useTotal) {
+                            // For items compared by total price
+                            const saving = Math.abs(parseFloat(product.price) - parseFloat(product.comparedWith.price));
+                            totalSavings += saving;
+                            if (product.store === 'ah') ahSavings += saving;
+                            if (product.store === 'jumbo') jumboSavings += saving;
+                        } else {
+                            // For items compared by price per kg
+                            const weightInKg = getWeightInKg(product.unit_size);
+                            const saving = priceDiff * weightInKg;
+                            totalSavings += saving;
+                            if (product.store === 'ah') ahSavings += saving;
+                            if (product.store === 'jumbo') jumboSavings += saving;
+                        }
+                    }
+
+                    if (product.store === 'ah') {
+                        ahItems++;
+                        ahCost += parseFloat(product.price);
+                    } else if (product.store === 'jumbo') {
+                        jumboItems++;
+                        jumboCost += parseFloat(product.price);
+                    }
+                }
+            });
+
+            // Update UI
+            document.getElementById('totalItems').textContent = totalItems;
+            document.getElementById('totalCost').textContent = `€${formatPrice(totalCost)}`;
+            document.getElementById('totalSavings').textContent = `€${formatPrice(totalSavings)}`;
+            
+            // Update AH statistics
+            document.getElementById('ahItems').textContent = `${ahItems} (€${formatPrice(ahCost)})`;
+            if (ahSavings > 0) {
+                document.getElementById('ahSavings').textContent = `Saved: €${formatPrice(ahSavings)}`;
+                document.getElementById('ahSavingsPerKg').textContent = `€${formatPrice(ahSavings)} saved`;
+            } else {
+                document.getElementById('ahSavings').textContent = '';
+                document.getElementById('ahSavingsPerKg').textContent = '';
+            }
+            
+            // Update Jumbo statistics
+            document.getElementById('jumboItems').textContent = `${jumboItems} (€${formatPrice(jumboCost)})`;
+            if (jumboSavings > 0) {
+                document.getElementById('jumboSavings').textContent = `Saved: €${formatPrice(jumboSavings)}`;
+                document.getElementById('jumboSavingsPerKg').textContent = `€${formatPrice(jumboSavings)} saved`;
+            } else {
+                document.getElementById('jumboSavings').textContent = '';
+                document.getElementById('jumboSavingsPerKg').textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

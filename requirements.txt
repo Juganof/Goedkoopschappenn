@@ -1,0 +1,17 @@
+flask
+playwright
+google-generativeai
+requests
+selenium
+beautifulsoup4
+undetected-chromedriver
+scrapy
+scrapy-playwright
+crawl4ai
+pydantic
+aiohttp
+asyncio
+python-dotenv
+pytest
+pytest-asyncio
+pytest-cov 
